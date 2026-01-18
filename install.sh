@@ -53,8 +53,8 @@ echo "CapsuleEcho: ENABLED"
 echo "DriftProtection: ABSOLUTE"
 echo ""
 
-# Install dependencies (if package-lock.json exists or node_modules doesn't)
-if [ -f "package-lock.json" ] || [ ! -d "node_modules" ]; then
+# Install dependencies if package.json exists and node_modules doesn't
+if [ -f "package.json" ] && [ ! -d "node_modules" ]; then
     echo "Installing dependencies..."
     npm install
     if [ $? -eq 0 ]; then
@@ -64,7 +64,7 @@ if [ -f "package-lock.json" ] || [ ! -d "node_modules" ]; then
         exit 1
     fi
 else
-    echo "✓ Dependencies already installed"
+    echo "✓ Dependencies already installed (or no package.json)"
 fi
 
 echo ""
