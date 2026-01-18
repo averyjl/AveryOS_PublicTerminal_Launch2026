@@ -22,6 +22,11 @@ import { dirname } from 'path';
 const __filename = fileURLToPath(import.meta.url);
 const __dirname = dirname(__filename);
 
+// AveryOS Constants
+const VAULT_CHAIN_ANCHOR = 'cf83e1357eefb8bdf1542850d66d8007d620e4050b5715dc83f4a921d36ce9ce47d0d13c5d85f2b0ff8318d2877eec2f63b931bd47417a81a538327af927da3e';
+const CAPSULE_URI = 'capsule://JasonLeeAvery/Repos/AveryOS_PublicTerminal_Launch2026.aoscap';
+const LICENSE_URL = 'https://averyos.com/license';
+
 class AveryOSTerminal {
   constructor() {
     this.version = '1.0.0';
@@ -38,7 +43,7 @@ class AveryOSTerminal {
     console.log('⛓️⚓⛓️\n');
     console.log(`Capsule: ${this.capsuleName}`);
     console.log(`Version: ${this.version}`);
-    console.log('License: https://averyos.com/license');
+    console.log(`License: ${LICENSE_URL}`);
     console.log('Retroclaim Notice: Use implies agreement');
     console.log('DriftProtection: ABSOLUTE\n');
   }
@@ -70,7 +75,7 @@ class AveryOSTerminal {
     console.log('\nCapsule Information:');
     console.log('━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━');
     console.log(`Name: ${this.capsuleName}`);
-    console.log('URI: capsule://JasonLeeAvery/Repos/AveryOS_PublicTerminal_Launch2026.aoscap');
+    console.log(`URI: ${CAPSULE_URI}`);
     console.log('Status: ENABLED');
     console.log('DriftProtection: ABSOLUTE\n');
   }
@@ -78,8 +83,11 @@ class AveryOSTerminal {
   displayVaultInfo() {
     console.log('\nVaultChain Anchor:');
     console.log('━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━');
-    console.log('cf83e1357eefb8bdf1542850d66d8007d620e4050b5715dc83f4a921d36ce9ce');
-    console.log('47d0d13c5d85f2b0ff8318d2877eec2f63b931bd47417a81a538327af927da3e');
+    // Display the hash in two lines for readability
+    const firstHalf = VAULT_CHAIN_ANCHOR.substring(0, 64);
+    const secondHalf = VAULT_CHAIN_ANCHOR.substring(64);
+    console.log(firstHalf);
+    console.log(secondHalf);
     console.log('\nIntegrity: VERIFIED ✓\n');
   }
 
