@@ -17,6 +17,8 @@ set -e
 DEPLOYMENT_VERSION="TerminalLive_v1"
 DEPLOYMENT_DATE=$(date -u +"%Y-%m-%d %H:%M:%S UTC")
 DEPLOYMENT_STATUS="INITIALIZING"
+MANIFEST_FILE="deployment-manifest.json"
+VAULT_ANCHOR="cf83e1357eefb8bdf1542850d66d8007d620e4050b5715dc83f4a921d36ce9ce47d0d13c5d85f2b0ff8318d2877eec2f63b931bd47417a81a538327af927da3e"
 
 echo "⛓️⚓⛓️"
 echo ""
@@ -39,7 +41,6 @@ echo ""
 
 # Verify VaultChain integrity
 echo "🔒 Verifying VaultChain Anchor..."
-VAULT_ANCHOR="cf83e1357eefb8bdf1542850d66d8007d620e4050b5715dc83f4a921d36ce9ce47d0d13c5d85f2b0ff8318d2877eec2f63b931bd47417a81a538327af927da3e"
 echo "VaultChain: ${VAULT_ANCHOR:0:32}...${VAULT_ANCHOR: -32}"
 echo "✓ VaultChain integrity verified"
 echo ""
@@ -91,7 +92,12 @@ DEPLOYMENT_STATUS="DEPLOYMENT_PREP"
 
 # Create deployment manifest
 echo "📝 Creating deployment manifest..."
-MANIFEST_FILE="deployment-manifest.json"
+
+# Capture environment information
+NODE_VERSION=$(node -v)
+NPM_VERSION=$(npm -v)
+PLATFORM=$(uname -s)
+ARCHITECTURE=$(uname -m)
 
 cat > "${MANIFEST_FILE}" << EOF
 {
@@ -109,10 +115,10 @@ cat > "${MANIFEST_FILE}" << EOF
       "verified": true
     },
     "environment": {
-      "nodeVersion": "$(node -v)",
-      "npmVersion": "$(npm -v)",
-      "platform": "$(uname -s)",
-      "architecture": "$(uname -m)"
+      "nodeVersion": "${NODE_VERSION}",
+      "npmVersion": "${NPM_VERSION}",
+      "platform": "${PLATFORM}",
+      "architecture": "${ARCHITECTURE}"
     },
     "status": "DEPLOYED",
     "license": "https://averyos.com/license",
@@ -129,11 +135,13 @@ DEPLOYMENT_STATUS="VERIFICATION"
 # Verify terminal functionality
 echo "🧪 Verifying terminal functionality..."
 if [ -f "index.js" ]; then
-    # Test that the terminal starts without errors
-    timeout 2 node index.js <<EOF 2>&1 | head -5 || true
+    # Test that the terminal starts without errors by checking the output
+    TERMINAL_OUTPUT=$(timeout 2 node index.js <<EOF 2>&1 || true
 exit
 EOF
-    if [ $? -eq 0 ] || [ $? -eq 124 ]; then  # 124 is timeout's success code
+)
+    # Check if the output contains the expected header
+    if echo "${TERMINAL_OUTPUT}" | grep -q "AveryOS Public Terminal"; then
         echo "✓ Terminal verification passed"
     else
         echo "⚠ Terminal verification completed with warnings"
