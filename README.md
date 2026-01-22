@@ -53,6 +53,26 @@ or directly:
 node index.js
 ```
 
+### Running the Download Server
+
+To start the HTTP server for capsule downloads:
+
+```bash
+npm run server
+```
+
+or directly:
+
+```bash
+node server.js
+```
+
+The server will be available at `http://localhost:3000` by default. You can set a custom port using the `PORT` environment variable:
+
+```bash
+PORT=8080 npm run server
+```
+
 ## Deployment
 
 ### TerminalLive_v1 Deployment
@@ -203,7 +223,9 @@ The terminal includes a powerful export feature that packages the entire termina
 
 ### Exporting the Capsule
 
-To export the terminal as a capsule:
+#### From Terminal Command
+
+To export the terminal as a capsule from within the terminal:
 
 ```bash
 AveryOS> export
@@ -217,6 +239,54 @@ This creates a ZIP file containing:
 - `README.md` - Documentation
 - `deploy.sh` - Deployment script
 - `install.sh` - Installation script
+
+### Capsule Download Server
+
+For easy download and automation support, the terminal includes an HTTP server that hosts the capsule ZIP file for download at `terminal.averyos.com` or any configured domain.
+
+#### Starting the Download Server
+
+```bash
+npm run server
+```
+
+Or directly:
+
+```bash
+node server.js
+```
+
+The server will start on port 3000 by default (configurable via `PORT` environment variable).
+
+#### Server Endpoints
+
+- **`/`** - Landing page with download information
+- **`/download`** - Download the capsule ZIP file
+- **`/info`** - View capsule information and VaultChain details
+- **`/health`** - Health check endpoint (JSON response)
+
+#### Automation Downloads
+
+Use curl to download the capsule:
+
+```bash
+curl -O http://terminal.averyos.com/download
+```
+
+Or with wget:
+
+```bash
+wget http://terminal.averyos.com/download
+```
+
+The downloaded file will be saved as `TerminalStack_v1.aoscap.zip`.
+
+#### Server Features
+
+- **Auto-generation**: Capsule is automatically generated on first request if not present
+- **Custom Headers**: Includes VaultChain anchor, capsule URI, and license information
+- **Health Monitoring**: Health check endpoint for uptime monitoring
+- **Graceful Shutdown**: Handles SIGTERM and SIGINT signals properly
 
 The exported capsule can be deployed to production endpoints and used for:
 - Direct interaction via authenticated buttons
