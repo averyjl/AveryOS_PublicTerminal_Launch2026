@@ -220,6 +220,12 @@ Once the terminal is running, you can use the following commands:
 ### Deployment Commands
 - `deploy` - Deploy terminal with GitHub push automation (supports --no-push, --no-script, -m options)
 
+### CapsuleEcho Trace Commands
+- `trace` - View recent capsule traces (default: last 20)
+- `trace-details <id>` - Show detailed trace information for a specific trace ID
+- `trace-viewer` - Display formatted trace visualization dashboard
+- `trace-clear` - Clear all trace logs and reset the trace system
+
 ### Utility Commands
 - `echo <text>` - Display the specified text
 - `history` - Show command history
@@ -246,6 +252,11 @@ AveryOS> capsule deploy
 # Export terminal as capsule
 AveryOS> export
 
+# View CapsuleEcho traces
+AveryOS> trace
+AveryOS> trace-details 5
+AveryOS> trace-viewer
+AveryOS> trace-clear
 # Deploy with GitHub push automation
 AveryOS> deploy
 
@@ -333,6 +344,97 @@ The exported capsule can be deployed to production endpoints and used for:
 - CLI bridge communication
 - Multi-user capsule deployment with proper physics safeguards
 
+## CapsuleEcho Trace Viewer
+
+The terminal includes an integrated CapsuleEcho Trace Viewer for monitoring and visualizing capsule operations. This powerful diagnostic tool helps track system activities, commands, file operations, and capsule events in real-time.
+
+### Trace System Features
+
+- **Automatic Trace Logging**: All commands, file operations, and system events are automatically logged
+- **Category Organization**: Traces are organized by category (SYSTEM, COMMAND, FILE, CAPSULE, ERROR, etc.)
+- **Detailed Information**: Each trace includes timestamp, category, message, and contextual details
+- **Dashboard Visualization**: Interactive dashboard with statistics and timeline views
+- **Trace History**: Maintains up to 100 recent traces in memory
+
+### Using the Trace Viewer
+
+#### View Recent Traces
+
+```bash
+AveryOS> trace
+```
+
+This displays the last 20 traces with timestamps and categories. You can specify a different number:
+
+```bash
+AveryOS> trace 50
+```
+
+#### View Detailed Trace Information
+
+```bash
+AveryOS> trace-details 5
+```
+
+Shows complete details for trace ID 5, including:
+- Trace ID and timestamp
+- Category and message
+- Capsule URI
+- Detailed contextual information (parameters, paths, errors, etc.)
+
+#### Open the Trace Viewer Dashboard
+
+```bash
+AveryOS> trace-viewer
+```
+
+Displays a comprehensive dashboard with:
+- **Trace Summary**: Total traces and category counts
+- **Category Breakdown**: Visual bar chart of trace categories
+- **Recent Activity Timeline**: Last 10 trace events
+- **Active Capsule Information**: Current capsule details
+
+#### Clear Trace Logs
+
+```bash
+AveryOS> trace-clear
+```
+
+Clears all trace logs and resets the trace system. This is useful for starting fresh or managing memory usage.
+
+### Trace Categories
+
+The trace system uses the following categories:
+
+- 🔹 **SYSTEM**: System initialization, startup, and shutdown events
+- 📦 **CAPSULE**: Capsule export and integrity operations
+- ⌨️ **COMMAND**: Command execution tracking
+- 📄 **FILE**: File system operations (read, write, directory changes)
+- ❌ **ERROR**: Error conditions and failures
+- ⚠️ **WARNING**: Warning conditions (unknown commands, etc.)
+- ℹ️ **INFO**: Informational messages
+- ✅ **SUCCESS**: Successful operation completions
+
+### Example Trace Workflow
+
+```bash
+# Start working with files
+AveryOS> mkdir myproject
+AveryOS> cd myproject
+AveryOS> pwd
+
+# View what happened
+AveryOS> trace
+
+# Get details on a specific operation
+AveryOS> trace-details 3
+
+# Open the full dashboard
+AveryOS> trace-viewer
+
+# Clean up when done
+AveryOS> trace-clear
+```
 ### Capsule Download Server
 
 The repository includes a web server that provides an HTTP endpoint for downloading the capsule ZIP file. This is ideal for deployment to terminal.averyos.com or similar hosting environments.
@@ -422,12 +524,14 @@ curl http://localhost:3000/regenerate
 ## Features
 
 - **CapsuleEcho Technology**: Enhanced security and integrity verification
+- **CapsuleEcho Trace Viewer**: Real-time monitoring and visualization of capsule operations
 - **Drift Protection**: ABSOLUTE protection against unauthorized modifications
 - **VaultChain Anchor**: SHA-512 based integrity verification
 - **Interactive Terminal**: User-friendly command-line interface
 - **Retroclaim Notice**: Clear usage agreements
 - **FullStack Commands**: Comprehensive file system, system information, and utility commands
 - **Command History**: Track and review previously executed commands
+- **Trace Logging**: Automatic logging of all operations with detailed diagnostics
 - **Cross-Platform**: Works on Windows, macOS, and Linux
 
 ## Requirements

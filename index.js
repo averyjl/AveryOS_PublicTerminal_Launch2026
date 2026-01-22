@@ -35,6 +35,38 @@ class AveryOSTerminal {
     this.rl = null;
     this.currentDir = process.cwd();
     this.commandHistory = [];
+    this.capsuleTraces = [];
+    this.traceIdCounter = 1;
+    this.MAX_TRACES = 100; // Maximum number of traces to keep in memory
+    this.initializeCapsuleTracing();
+  }
+
+  initializeCapsuleTracing() {
+    // Initialize CapsuleEcho trace system
+    this.logTrace('SYSTEM', 'CapsuleEcho Trace System Initialized', { 
+      version: this.version,
+      capsule: this.capsuleName,
+      vaultAnchor: VAULT_CHAIN_ANCHOR.substring(0, 16) + '...'
+    });
+  }
+
+  logTrace(category, message, details = {}) {
+    const trace = {
+      id: this.traceIdCounter++,
+      timestamp: new Date().toISOString(),
+      category: category,
+      message: message,
+      details: details,
+      capsuleUri: CAPSULE_URI
+    };
+    this.capsuleTraces.push(trace);
+    
+    // Keep only the last MAX_TRACES traces to avoid memory issues
+    if (this.capsuleTraces.length > this.MAX_TRACES) {
+      this.capsuleTraces.shift();
+    }
+    
+    return trace.id;
   }
 
   displayHeader() {
@@ -82,6 +114,11 @@ class AveryOSTerminal {
     console.log('  capsule deploy - Deploy capsule to production (TerminalLive_v1)');
     console.log('  export         - Export terminal as capsule ZIP (TerminalStack_v1.aoscap.zip)');
     console.log('  export    - Export terminal as capsule ZIP (TerminalStack_v1.aoscap.zip)');
+    console.log('\n🔍 CapsuleEcho Trace Commands:');
+    console.log('  trace           - View recent capsule traces');
+    console.log('  trace-details <id> - Show detailed trace information');
+    console.log('  trace-viewer    - Display formatted trace visualization');
+    console.log('  trace-clear     - Clear all trace logs');
     console.log('\n🚀 Deployment Commands:');
     console.log('  deploy    - Deploy terminal with GitHub push automation');
     console.log('\n🛠️  Utility Commands:');
@@ -156,12 +193,18 @@ class AveryOSTerminal {
 
   changeDirectory(args) {
     if (args.length === 0) {
+      const previousDir = this.currentDir;
       this.currentDir = homedir();
       console.log(`Changed to home directory: ${this.currentDir}\n`);
+      this.logTrace('FILE', 'Changed to home directory', { 
+        from: previousDir, 
+        to: this.currentDir 
+      });
       return;
     }
 
     try {
+      const previousDir = this.currentDir;
       const targetDir = args[0] === '..' 
         ? dirname(this.currentDir)
         : args[0] === '~'
@@ -173,14 +216,27 @@ class AveryOSTerminal {
         if (stats.isDirectory()) {
           this.currentDir = targetDir;
           console.log(`Changed directory to: ${this.currentDir}\n`);
+          this.logTrace('FILE', 'Directory changed', { 
+            from: previousDir,
+            to: this.currentDir 
+          });
         } else {
           console.log(`Error: ${args[0]} is not a directory\n`);
+          this.logTrace('ERROR', 'Directory change failed - not a directory', { 
+            path: args[0] 
+          });
         }
       } else {
         console.log(`Error: Directory not found: ${args[0]}\n`);
+        this.logTrace('ERROR', 'Directory change failed - not found', { 
+          path: args[0] 
+        });
       }
     } catch (err) {
       console.log(`Error: ${err.message}\n`);
+      this.logTrace('ERROR', 'Directory change failed', { 
+        error: err.message 
+      });
     }
   }
 
@@ -194,8 +250,15 @@ class AveryOSTerminal {
       const targetDir = resolve(this.currentDir, args[0]);
       mkdirSync(targetDir, { recursive: true });
       console.log(`Directory created: ${args[0]}\n`);
+      this.logTrace('FILE', 'Directory created', { 
+        path: targetDir 
+      });
     } catch (err) {
       console.log(`Error: ${err.message}\n`);
+      this.logTrace('ERROR', 'Directory creation failed', { 
+        path: args[0],
+        error: err.message 
+      });
     }
   }
 
@@ -209,19 +272,33 @@ class AveryOSTerminal {
       const targetFile = resolve(this.currentDir, args[0]);
       if (!existsSync(targetFile)) {
         console.log(`Error: File not found: ${args[0]}\n`);
+        this.logTrace('ERROR', 'File read failed - not found', { 
+          path: args[0] 
+        });
         return;
       }
 
       const stats = statSync(targetFile);
       if (!stats.isFile()) {
         console.log(`Error: ${args[0]} is not a file\n`);
+        this.logTrace('ERROR', 'File read failed - not a file', { 
+          path: args[0] 
+        });
         return;
       }
 
       const content = readFileSync(targetFile, 'utf8');
       console.log('\n' + content + '\n');
+      this.logTrace('FILE', 'File read', { 
+        path: targetFile,
+        size: stats.size 
+      });
     } catch (err) {
       console.log(`Error: ${err.message}\n`);
+      this.logTrace('ERROR', 'File read failed', { 
+        path: args[0],
+        error: err.message 
+      });
     }
   }
 
@@ -235,13 +312,23 @@ class AveryOSTerminal {
       const targetPath = resolve(this.currentDir, args[0]);
       if (!existsSync(targetPath)) {
         console.log(`Error: File or directory not found: ${args[0]}\n`);
+        this.logTrace('ERROR', 'Remove failed - not found', { 
+          path: args[0] 
+        });
         return;
       }
 
       rmSync(targetPath, { recursive: true, force: true });
       console.log(`Removed: ${args[0]}\n`);
+      this.logTrace('FILE', 'File/directory removed', { 
+        path: targetPath 
+      });
     } catch (err) {
       console.log(`Error: ${err.message}\n`);
+      this.logTrace('ERROR', 'Remove failed', { 
+        path: args[0],
+        error: err.message 
+      });
     }
   }
 
@@ -346,6 +433,11 @@ class AveryOSTerminal {
     console.log('\nExporting Terminal as Capsule ZIP...');
     console.log('━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━');
 
+    // Log trace for export operation
+    this.logTrace('CAPSULE', 'Capsule export initiated', {
+      outputFile: 'TerminalStack_v1.aoscap.zip'
+    });
+
     const outputFileName = 'TerminalStack_v1.aoscap.zip';
     const outputPath = resolve(process.cwd(), outputFileName);
     const output = createWriteStream(outputPath);
@@ -413,12 +505,34 @@ class AveryOSTerminal {
           console.warn(`Warning: File not found: ${file}`);
         }
       });
+      console.log('\nThe capsule can now be deployed to endpoints like terminal.averyos.com');
+      console.log('for authenticated buttons/CLI bridge interaction.\n');
+      
+      // Log successful export
+      this.logTrace('CAPSULE', 'Capsule export completed successfully', {
+        outputFile: outputFileName,
+        sizeInMB: sizeInMB,
+        filesIncluded: filesToInclude.length
+      });
+    });
+
+    output.on('error', (err) => {
+      console.error(`Error creating output file: ${err.message}\n`);
+      this.logTrace('ERROR', 'Capsule export failed - output error', {
+        error: err.message
+      });
 
       // Finalize the archive
       archive.finalize();
     });
   }
 
+    archive.on('error', (err) => {
+      console.error(`Error creating archive: ${err.message}\n`);
+      this.logTrace('ERROR', 'Capsule export failed - archive error', {
+        error: err.message
+      });
+    });
   // Deployment Commands
 
   async deployTerminal(args) {
@@ -550,6 +664,184 @@ class AveryOSTerminal {
     });
   }
 
+  // CapsuleEcho Trace Viewer Commands
+
+  displayTraces(args) {
+    let limit = 20; // Default limit
+    
+    if (args.length > 0) {
+      const parsedLimit = parseInt(args[0]);
+      if (isNaN(parsedLimit) || parsedLimit <= 0) {
+        console.log('Error: Please specify a valid positive number for trace limit\n');
+        return;
+      }
+      limit = parsedLimit;
+    }
+    
+    const traces = this.capsuleTraces.slice(-limit);
+
+    console.log('\n🔍 CapsuleEcho Trace Logs:');
+    console.log('━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━');
+    
+    if (traces.length === 0) {
+      console.log('(no traces recorded)');
+      console.log('');
+      return;
+    }
+
+    console.log(`Showing last ${traces.length} traces:\n`);
+    
+    traces.forEach(trace => {
+      const time = new Date(trace.timestamp).toLocaleTimeString();
+      const categoryIcon = this.getCategoryIcon(trace.category);
+      console.log(`${categoryIcon} [${trace.id}] ${time} - ${trace.category}: ${trace.message}`);
+    });
+    
+    console.log('\n💡 Use "trace-details <id>" to view detailed information');
+    console.log('💡 Use "trace-viewer" for formatted visualization\n');
+  }
+
+  displayTraceDetails(args) {
+    if (args.length === 0) {
+      console.log('Error: Please specify a trace ID\n');
+      console.log('Usage: trace-details <id>\n');
+      return;
+    }
+
+    const parsedId = parseInt(args[0]);
+    if (isNaN(parsedId)) {
+      console.log(`Error: Invalid trace ID "${args[0]}" - must be a number\n`);
+      return;
+    }
+
+    const trace = this.capsuleTraces.find(t => t.id === parsedId);
+
+    if (!trace) {
+      console.log(`Error: Trace ID ${parsedId} not found\n`);
+      return;
+    }
+
+    console.log('\n🔍 CapsuleEcho Trace Details:');
+    console.log('━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━');
+    console.log(`Trace ID: ${trace.id}`);
+    console.log(`Timestamp: ${trace.timestamp}`);
+    console.log(`Category: ${trace.category}`);
+    console.log(`Message: ${trace.message}`);
+    console.log(`Capsule URI: ${trace.capsuleUri}`);
+    
+    if (Object.keys(trace.details).length > 0) {
+      console.log('\nDetails:');
+      Object.entries(trace.details).forEach(([key, value]) => {
+        let displayValue;
+        try {
+          displayValue = typeof value === 'object' 
+            ? JSON.stringify(value, null, 2).split('\n').map((line, idx) => idx === 0 ? line : '  ' + line).join('\n')
+            : value;
+        } catch (err) {
+          // Handle circular references or other serialization errors
+          displayValue = String(value);
+        }
+        console.log(`  ${key}: ${displayValue}`);
+      });
+    }
+    console.log('');
+  }
+
+  displayTraceViewer() {
+    console.log('\n╔════════════════════════════════════════════════════════════════════════════╗');
+    console.log('║               🔍 CapsuleEcho Trace Viewer Dashboard                        ║');
+    console.log('╚════════════════════════════════════════════════════════════════════════════╝');
+    console.log('');
+    
+    // Summary Statistics
+    const totalTraces = this.capsuleTraces.length;
+    const categories = {};
+    this.capsuleTraces.forEach(trace => {
+      categories[trace.category] = (categories[trace.category] || 0) + 1;
+    });
+
+    console.log('📊 Trace Summary:');
+    console.log('━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━');
+    console.log(`Total Traces: ${totalTraces}`);
+    console.log(`Categories: ${Object.keys(categories).length}`);
+    console.log('');
+    
+    // Category Breakdown
+    console.log('📋 Category Breakdown:');
+    console.log('━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━');
+    Object.entries(categories).sort((a, b) => b[1] - a[1]).forEach(([category, count]) => {
+      const icon = this.getCategoryIcon(category);
+      const percentage = ((count / totalTraces) * 100).toFixed(1);
+      // Use ceiling to ensure single-occurrence categories get proper representation
+      const barCount = Math.max(1, Math.ceil(count / 2));
+      const bar = '█'.repeat(barCount);
+      console.log(`${icon} ${category.padEnd(15)} ${count.toString().padStart(3)} (${percentage}%) ${bar}`);
+    });
+    console.log('');
+    
+    // Recent Activity Timeline
+    console.log('📅 Recent Activity Timeline (Last 10):');
+    console.log('━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━');
+    const recentTraces = this.capsuleTraces.slice(-10);
+    
+    if (recentTraces.length === 0) {
+      console.log('(no recent activity)');
+    } else {
+      recentTraces.forEach(trace => {
+        const time = new Date(trace.timestamp).toLocaleTimeString();
+        const icon = this.getCategoryIcon(trace.category);
+        const shortMessage = trace.message.length > 50 
+          ? trace.message.substring(0, 47) + '...' 
+          : trace.message;
+        console.log(`  ${icon} ${time} │ ${trace.category.padEnd(10)} │ ${shortMessage}`);
+      });
+    }
+    console.log('');
+    
+    // Capsule Information
+    console.log('📦 Active Capsule:');
+    console.log('━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━');
+    console.log(`Name: ${this.capsuleName}`);
+    console.log(`URI: ${CAPSULE_URI}`);
+    console.log(`Vault Anchor: ${VAULT_CHAIN_ANCHOR.substring(0, 32)}...`);
+    console.log('');
+    
+    console.log('💡 Commands:');
+    console.log('  trace               - View all traces');
+    console.log('  trace-details <id>  - View trace details');
+    console.log('  trace-clear         - Clear all traces\n');
+  }
+
+  clearTraces() {
+    const clearedCount = this.capsuleTraces.length;
+    this.capsuleTraces = [];
+    this.traceIdCounter = 1;
+    
+    console.log('\n🔍 CapsuleEcho Trace System:');
+    console.log('━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━');
+    console.log(`✓ Cleared ${clearedCount} trace logs`);
+    console.log('✓ Trace system reset\n');
+    
+    // Log the reset operation
+    this.logTrace('SYSTEM', 'Trace system reset', { 
+      clearedCount: clearedCount 
+    });
+  }
+
+  getCategoryIcon(category) {
+    const icons = {
+      'SYSTEM': '⚙️',
+      'CAPSULE': '📦',
+      'COMMAND': '⌨️',
+      'FILE': '📄',
+      'ERROR': '❌',
+      'WARNING': '⚠️',
+      'INFO': 'ℹ️',
+      'SUCCESS': '✅'
+    };
+    return icons[category] || '🔹';
+  }
+
   processCommand(input) {
   // Helper method to execute commands
   executeCommand(command, args, cwd) {
@@ -596,6 +888,10 @@ class AveryOSTerminal {
     // Add to history (skip empty commands)
     if (trimmedInput) {
       this.commandHistory.push(trimmedInput);
+      // Log command execution trace
+      this.logTrace('COMMAND', `Command executed: ${command}`, { 
+        args: args.length > 0 ? args : null 
+      });
     }
 
     switch (command) {
@@ -628,6 +924,20 @@ class AveryOSTerminal {
       // Deployment Commands
       case 'deploy':
         await this.deployTerminal(args);
+        break;
+      
+      // CapsuleEcho Trace Commands
+      case 'trace':
+        this.displayTraces(args);
+        break;
+      case 'trace-details':
+        this.displayTraceDetails(args);
+        break;
+      case 'trace-viewer':
+        this.displayTraceViewer();
+        break;
+      case 'trace-clear':
+        this.clearTraces();
         break;
       
       // File System Commands
@@ -685,6 +995,10 @@ class AveryOSTerminal {
       case 'quit':
         console.log('\nExiting AveryOS Terminal...');
         console.log('⛓️⚓⛓️\n');
+        this.logTrace('SYSTEM', 'Terminal session ended', { 
+          totalCommands: this.commandHistory.length,
+          totalTraces: this.capsuleTraces.length
+        });
         this.rl.close();
         process.exit(0);
         break;
@@ -694,12 +1008,20 @@ class AveryOSTerminal {
       default:
         console.log(`Unknown command: ${command}`);
         console.log('Type "help" for available commands.\n');
+        this.logTrace('WARNING', `Unknown command attempted: ${command}`, {});
     }
   }
 
   start() {
     this.displayHeader();
     this.displayWelcome();
+    
+    // Log terminal start
+    this.logTrace('SYSTEM', 'Terminal session started', {
+      user: userInfo().username,
+      platform: platform(),
+      nodeVersion: process.version
+    });
 
     this.rl = createInterface({
       input: process.stdin,
