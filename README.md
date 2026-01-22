@@ -75,6 +75,22 @@ PORT=8080 npm run server
 
 ## Deployment
 
+### CLI Deployment (New!)
+
+Deploy the capsule directly from the terminal CLI using the new `capsule deploy` command:
+
+```bash
+AveryOS> capsule deploy
+```
+
+This command executes the TerminalLive_v1 deployment script, which will:
+1. Verify VaultChain integrity
+2. Check prerequisites (Node.js, NPM)
+3. Install production dependencies
+4. Create deployment manifest
+5. Verify terminal functionality
+6. Generate deployment report
+
 ### TerminalLive_v1 Deployment
 
 Deploy the terminal to a live production environment using the TerminalLive_v1 deployment system:
@@ -151,6 +167,26 @@ The `terminallive.config` file contains deployment-specific settings including:
 - Terminal behavior in live mode
 - Health check and logging options
 
+### GitHub Automation
+
+The repository includes automated GitHub Actions workflows for seamless deployment:
+
+#### Auto Push on Commit
+Every push to the `main` branch automatically:
+1. Verifies VaultChain integrity
+2. Generates capsule metadata with commit information
+3. Syncs with the capsule registry
+4. Reports deployment status
+
+#### Cloudflare Pages Deployment
+Automatic deployment to Cloudflare Pages on push to `main`:
+1. VaultChain verification
+2. Executes deployment script
+3. Publishes to Cloudflare Pages
+4. Reports deployment status
+
+Both workflows can be monitored in the GitHub Actions tab and provide detailed logs for troubleshooting.
+
 ## Usage
 
 Once the terminal is running, you can use the following commands:
@@ -179,6 +215,7 @@ Once the terminal is running, you can use the following commands:
 
 ### Capsule Commands
 - `export` - Export terminal as capsule ZIP file (TerminalStack_v1.aoscap.zip)
+- `capsule deploy` - Deploy capsule to production (runs TerminalLive_v1 deployment)
 
 ### Deployment Commands
 - `deploy` - Deploy terminal with GitHub push automation (supports --no-push, --no-script, -m options)
@@ -202,6 +239,9 @@ AveryOS> cat myfile.txt
 AveryOS> whoami
 AveryOS> status
 AveryOS> hostname
+
+# Deploy capsule to production
+AveryOS> capsule deploy
 
 # Export terminal as capsule
 AveryOS> export

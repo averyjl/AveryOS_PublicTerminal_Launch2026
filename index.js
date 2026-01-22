@@ -79,6 +79,8 @@ class AveryOSTerminal {
     console.log('  date      - Show current date and time');
     console.log('  hostname  - Display system hostname');
     console.log('\n📦 Capsule Commands:');
+    console.log('  capsule deploy - Deploy capsule to production (TerminalLive_v1)');
+    console.log('  export         - Export terminal as capsule ZIP (TerminalStack_v1.aoscap.zip)');
     console.log('  export    - Export terminal as capsule ZIP (TerminalStack_v1.aoscap.zip)');
     console.log('\n🚀 Deployment Commands:');
     console.log('  deploy    - Deploy terminal with GitHub push automation');
@@ -512,6 +514,43 @@ class AveryOSTerminal {
     }
   }
 
+  deployCapsule() {
+    console.log('\nDeploying Capsule to Production...');
+    console.log('━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━');
+    console.log('Running TerminalLive_v1 deployment script...\n');
+
+    const __filename = fileURLToPath(import.meta.url);
+    const __dirname = dirname(__filename);
+    const deployScriptPath = join(__dirname, 'deploy.sh');
+
+    // Check if deploy.sh exists
+    if (!existsSync(deployScriptPath)) {
+      console.log('❌ Error: deploy.sh not found');
+      console.log('Please ensure deploy.sh is in the terminal directory.\n');
+      return;
+    }
+
+    // Execute the deploy.sh script
+    const deployProcess = spawn('bash', [deployScriptPath], {
+      cwd: __dirname,
+      stdio: 'inherit'
+    });
+
+    deployProcess.on('close', (code) => {
+      if (code === 0) {
+        console.log('\n✅ Capsule deployment completed successfully!');
+        console.log('⛓️⚓⛓️\n');
+      } else {
+        console.log(`\n❌ Deployment failed with exit code ${code}\n`);
+      }
+    });
+
+    deployProcess.on('error', (err) => {
+      console.log(`\n❌ Error running deployment script: ${err.message}\n`);
+    });
+  }
+
+  processCommand(input) {
   // Helper method to execute commands
   executeCommand(command, args, cwd) {
     return new Promise((resolve, reject) => {
@@ -567,7 +606,12 @@ class AveryOSTerminal {
         this.displayAbout();
         break;
       case 'capsule':
-        this.displayCapsuleInfo();
+        // Check if there's a subcommand
+        if (args.length > 0 && args[0].toLowerCase() === 'deploy') {
+          this.deployCapsule();
+        } else {
+          this.displayCapsuleInfo();
+        }
         break;
       case 'vault':
         this.displayVaultInfo();
