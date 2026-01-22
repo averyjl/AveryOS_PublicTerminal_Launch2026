@@ -224,8 +224,9 @@ const server = createServer((req, res) => {
       // Generate the capsule if it doesn't exist
       generateCapsule((err, generatedPath) => {
         if (err) {
+          console.error(`❌ Error generating capsule: ${err.message}`);
           res.writeHead(500, { 'Content-Type': 'text/plain' });
-          res.end('Error generating capsule');
+          res.end('Error generating capsule. Please try again later.');
           return;
         }
         serveCapsule(res, generatedPath);
@@ -318,7 +319,7 @@ server.listen(PORT, () => {
   if (!existsSync(capsulePath)) {
     generateCapsule((err) => {
       if (err) {
-        console.error('❌ Failed to pre-generate capsule');
+        console.error('❌ Failed to pre-generate capsule:', err.message);
       }
     });
   } else {
