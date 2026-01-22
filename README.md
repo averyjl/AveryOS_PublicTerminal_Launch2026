@@ -176,6 +176,50 @@ The exported capsule can be deployed to production endpoints and used for:
 - CLI bridge communication
 - Multi-user capsule deployment with proper physics safeguards
 
+### Capsule Download Server
+
+The repository includes a web server that provides an HTTP endpoint for downloading the capsule ZIP file. This is ideal for deployment to terminal.averyos.com or similar hosting environments.
+
+#### Starting the Server
+
+```bash
+npm run server
+```
+
+By default, the server runs on port 3000. You can change the port using the PORT environment variable:
+
+```bash
+PORT=8080 npm run server
+```
+
+#### Available Endpoints
+
+- `GET /` - API information and available endpoints
+- `GET /info` - Detailed capsule information including VaultChain anchor
+- `GET /download/capsule` - Download the TerminalStack_v1.aoscap.zip file
+- `GET /health` - Health check endpoint
+
+#### Example Usage
+
+```bash
+# Get API information
+curl http://localhost:3000/
+
+# Get capsule information
+curl http://localhost:3000/info
+
+# Download the capsule ZIP
+curl -O -J http://localhost:3000/download/capsule
+
+# Or use wget
+wget http://localhost:3000/download/capsule
+
+# Or open in browser
+open http://localhost:3000/download/capsule
+```
+
+The server automatically generates a fresh capsule on-demand or serves a cached version if it's less than 1 hour old. This ensures downloads always contain the latest terminal code.
+
 ## Features
 
 - **CapsuleEcho Technology**: Enhanced security and integrity verification
