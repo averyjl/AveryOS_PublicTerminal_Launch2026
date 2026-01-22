@@ -1,0 +1,20 @@
+name: Auto Push Capsule Updates
+
+on:
+  push:
+    branches:
+      - main
+
+jobs:
+  sync:
+    runs-on: ubuntu-latest
+    steps:
+      - name: Checkout Repo
+        uses: actions/checkout@v3
+
+      - name: Sync Capsule with Registry
+        run: |
+          curl -X POST https://vaultchain.api/register-capsule \
+            -H "Authorization: Bearer ${{ secrets.AveryOS_CapsulePushToken_v2 }}" \
+            -H "Content-Type: application/json" \
+            -d @capsule_config.json
