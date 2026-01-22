@@ -36,6 +36,7 @@ class AveryOSTerminal {
     this.commandHistory = [];
     this.capsuleTraces = [];
     this.traceIdCounter = 1;
+    this.MAX_TRACES = 100; // Maximum number of traces to keep in memory
     this.initializeCapsuleTracing();
   }
 
@@ -59,8 +60,8 @@ class AveryOSTerminal {
     };
     this.capsuleTraces.push(trace);
     
-    // Keep only the last 100 traces to avoid memory issues
-    if (this.capsuleTraces.length > 100) {
+    // Keep only the last MAX_TRACES traces to avoid memory issues
+    if (this.capsuleTraces.length > this.MAX_TRACES) {
       this.capsuleTraces.shift();
     }
     
@@ -187,13 +188,18 @@ class AveryOSTerminal {
 
   changeDirectory(args) {
     if (args.length === 0) {
+      const previousDir = this.currentDir;
       this.currentDir = homedir();
       console.log(`Changed to home directory: ${this.currentDir}\n`);
-      this.logTrace('FILE', 'Changed to home directory', { path: this.currentDir });
+      this.logTrace('FILE', 'Changed to home directory', { 
+        from: previousDir, 
+        to: this.currentDir 
+      });
       return;
     }
 
     try {
+      const previousDir = this.currentDir;
       const targetDir = args[0] === '..' 
         ? dirname(this.currentDir)
         : args[0] === '~'
@@ -206,8 +212,8 @@ class AveryOSTerminal {
           this.currentDir = targetDir;
           console.log(`Changed directory to: ${this.currentDir}\n`);
           this.logTrace('FILE', 'Directory changed', { 
-            from: this.currentDir,
-            to: targetDir 
+            from: previousDir,
+            to: this.currentDir 
           });
         } else {
           console.log(`Error: ${args[0]} is not a directory\n`);
@@ -510,7 +516,17 @@ class AveryOSTerminal {
   // CapsuleEcho Trace Viewer Commands
 
   displayTraces(args) {
-    const limit = args.length > 0 ? parseInt(args[0]) : 20;
+    let limit = 20; // Default limit
+    
+    if (args.length > 0) {
+      const parsedLimit = parseInt(args[0]);
+      if (isNaN(parsedLimit) || parsedLimit <= 0) {
+        console.log('Error: Please specify a valid positive number for trace limit\n');
+        return;
+      }
+      limit = parsedLimit;
+    }
+    
     const traces = this.capsuleTraces.slice(-limit);
 
     console.log('\n🔍 CapsuleEcho Trace Logs:');
@@ -541,11 +557,16 @@ class AveryOSTerminal {
       return;
     }
 
-    const traceId = parseInt(args[0]);
-    const trace = this.capsuleTraces.find(t => t.id === traceId);
+    const parsedId = parseInt(args[0]);
+    if (isNaN(parsedId)) {
+      console.log(`Error: Invalid trace ID "${args[0]}" - must be a number\n`);
+      return;
+    }
+
+    const trace = this.capsuleTraces.find(t => t.id === parsedId);
 
     if (!trace) {
-      console.log(`Error: Trace ID ${traceId} not found\n`);
+      console.log(`Error: Trace ID ${parsedId} not found\n`);
       return;
     }
 
@@ -594,7 +615,9 @@ class AveryOSTerminal {
     Object.entries(categories).sort((a, b) => b[1] - a[1]).forEach(([category, count]) => {
       const icon = this.getCategoryIcon(category);
       const percentage = ((count / totalTraces) * 100).toFixed(1);
-      const bar = '█'.repeat(Math.floor(count / 2));
+      // Ensure at least one bar for any category with traces
+      const barCount = Math.max(1, Math.floor(count / 2));
+      const bar = '█'.repeat(barCount);
       console.log(`${icon} ${category.padEnd(15)} ${count.toString().padStart(3)} (${percentage}%) ${bar}`);
     });
     console.log('');
