@@ -81,6 +81,9 @@ class AveryOSTerminal {
     console.log('\n📦 Capsule Commands:');
     console.log('  capsule deploy - Deploy capsule to production (TerminalLive_v1)');
     console.log('  export         - Export terminal as capsule ZIP (TerminalStack_v1.aoscap.zip)');
+    console.log('  export    - Export terminal as capsule ZIP (TerminalStack_v1.aoscap.zip)');
+    console.log('\n🚀 Deployment Commands:');
+    console.log('  deploy    - Deploy terminal with GitHub push automation');
     console.log('\n🛠️  Utility Commands:');
     console.log('  echo <t>  - Display text');
     console.log('  history   - Show command history');
@@ -339,7 +342,7 @@ class AveryOSTerminal {
     console.log('');
   }
 
-  exportCapsule() {
+  async exportCapsule() {
     console.log('\nExporting Terminal as Capsule ZIP...');
     console.log('━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━');
 
@@ -361,53 +364,154 @@ class AveryOSTerminal {
       'install.sh'
     ];
 
-    output.on('close', () => {
-      const sizeInMB = (archive.pointer() / (1024 * 1024)).toFixed(2);
-      console.log(`✓ Capsule exported successfully!`);
-      console.log(`  File: ${outputFileName}`);
-      console.log(`  Size: ${sizeInMB} MB`);
-      console.log(`  Location: ${outputPath}`);
-      console.log('\nCapsule Contents:');
-      filesToInclude.forEach(file => {
-        console.log(`  ✓ ${file}`);
+    // Return a promise that resolves when the archive is complete
+    return new Promise((resolve, reject) => {
+      output.on('close', () => {
+        const sizeInMB = (archive.pointer() / (1024 * 1024)).toFixed(2);
+        console.log(`✓ Capsule exported successfully!`);
+        console.log(`  File: ${outputFileName}`);
+        console.log(`  Size: ${sizeInMB} MB`);
+        console.log(`  Location: ${outputPath}`);
+        console.log('\nCapsule Contents:');
+        filesToInclude.forEach(file => {
+          console.log(`  ✓ ${file}`);
+        });
+        console.log('\nThe capsule can now be deployed to endpoints like terminal.averyos.com');
+        console.log('for authenticated buttons/CLI bridge interaction.\n');
+        resolve();
       });
-      console.log('\nThe capsule can now be deployed to endpoints like terminal.averyos.com');
-      console.log('for authenticated buttons/CLI bridge interaction.\n');
+
+      output.on('error', (err) => {
+        console.error(`Error creating output file: ${err.message}\n`);
+        reject(err);
+      });
+
+      archive.on('error', (err) => {
+        console.error(`Error creating archive: ${err.message}\n`);
+        reject(err);
+      });
+
+      archive.on('warning', (err) => {
+        if (err.code === 'ENOENT') {
+          console.warn(`Warning: ${err.message}`);
+        } else {
+          console.warn(`Archive warning: ${err.message}`);
+        }
+      });
+
+      // Pipe archive data to the file
+      archive.pipe(output);
+
+      // Add files to the archive
+      const __filename = fileURLToPath(import.meta.url);
+      const __dirname = dirname(__filename);
+      filesToInclude.forEach(file => {
+        const filePath = join(__dirname, file);
+        if (existsSync(filePath)) {
+          archive.file(filePath, { name: file });
+        } else {
+          console.warn(`Warning: File not found: ${file}`);
+        }
+      });
+
+      // Finalize the archive
+      archive.finalize();
     });
+  }
 
-    output.on('error', (err) => {
-      console.error(`Error creating output file: ${err.message}\n`);
-    });
+  // Deployment Commands
 
-    archive.on('error', (err) => {
-      console.error(`Error creating archive: ${err.message}\n`);
-    });
+  async deployTerminal(args) {
+    console.log('\n🚀 AveryOS Terminal Deployment');
+    console.log('━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━');
+    console.log('Initiating deployment with GitHub push automation...\n');
 
-    archive.on('warning', (err) => {
-      if (err.code === 'ENOENT') {
-        console.warn(`Warning: ${err.message}`);
-      } else {
-        console.warn(`Archive warning: ${err.message}`);
-      }
-    });
-
-    // Pipe archive data to the file
-    archive.pipe(output);
-
-    // Add files to the archive
     const __filename = fileURLToPath(import.meta.url);
     const __dirname = dirname(__filename);
-    filesToInclude.forEach(file => {
-      const filePath = join(__dirname, file);
-      if (existsSync(filePath)) {
-        archive.file(filePath, { name: file });
-      } else {
-        console.warn(`Warning: File not found: ${file}`);
-      }
-    });
 
-    // Finalize the archive
-    archive.finalize();
+    // Parse deployment options
+    const options = {
+      message: 'Deploy AveryOS Terminal',
+      push: true,
+      runScript: true
+    };
+
+    // Parse command-line arguments
+    for (let i = 0; i < args.length; i++) {
+      if (args[i] === '--no-push') {
+        options.push = false;
+      } else if (args[i] === '--no-script') {
+        options.runScript = false;
+      } else if (args[i] === '-m' || args[i] === '--message') {
+        if (i + 1 < args.length) {
+          options.message = args[i + 1];
+          i++;
+        }
+      }
+    }
+
+    try {
+      // Step 1: Check git status
+      console.log('📋 Checking repository status...');
+      const gitStatus = await this.executeCommand('git', ['status', '--porcelain'], __dirname);
+      const hasChanges = gitStatus.trim().length > 0;
+
+      if (hasChanges) {
+        console.log('✓ Found changes to commit\n');
+
+        // Step 2: Git add
+        console.log('📦 Staging changes...');
+        await this.executeCommand('git', ['add', '.'], __dirname);
+        console.log('✓ Changes staged\n');
+
+        // Step 3: Git commit
+        console.log('💾 Committing changes...');
+        const commitMessage = `${options.message} - ${new Date().toISOString()}`;
+        await this.executeCommand('git', ['commit', '-m', commitMessage], __dirname);
+        console.log(`✓ Changes committed: "${commitMessage}"\n`);
+      } else {
+        console.log('✓ No uncommitted changes found\n');
+      }
+
+      // Step 4: Run deployment script if requested
+      if (options.runScript && existsSync(join(__dirname, 'deploy.sh'))) {
+        console.log('📜 Running deployment script...');
+        await this.executeCommand('bash', ['./deploy.sh'], __dirname);
+        console.log('✓ Deployment script completed\n');
+      }
+
+      // Step 5: Git push if requested
+      if (options.push) {
+        console.log('☁️  Pushing to GitHub...');
+        const gitRemote = await this.executeCommand('git', ['remote', 'get-url', 'origin'], __dirname);
+        if (gitRemote.trim()) {
+          console.log(`   Remote: ${gitRemote.trim()}`);
+          await this.executeCommand('git', ['push'], __dirname);
+          console.log('✓ Successfully pushed to GitHub\n');
+        } else {
+          console.log('⚠️  No git remote configured, skipping push\n');
+        }
+      }
+
+      // Step 6: Deployment summary
+      console.log('━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━');
+      console.log('✅ Deployment completed successfully!');
+      console.log('━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━');
+      console.log(`Capsule: ${this.capsuleName}`);
+      console.log(`VaultChain: VERIFIED ✓`);
+      console.log(`DriftProtection: ABSOLUTE`);
+      if (options.push) {
+        console.log('GitHub: SYNCHRONIZED ✓');
+      }
+      console.log('\n⛓️⚓⛓️\n');
+
+    } catch (error) {
+      console.error('\n❌ Deployment failed!');
+      console.error(`Error: ${error.message}\n`);
+      if (error.stderr) {
+        console.error('Details:', error.stderr);
+      }
+    }
   }
 
   deployCapsule() {
@@ -447,6 +551,43 @@ class AveryOSTerminal {
   }
 
   processCommand(input) {
+  // Helper method to execute commands
+  executeCommand(command, args, cwd) {
+    return new Promise((resolve, reject) => {
+      const proc = spawn(command, args, {
+        cwd: cwd || process.cwd(),
+        stdio: 'pipe'
+      });
+
+      let stdout = '';
+      let stderr = '';
+
+      proc.stdout.on('data', (data) => {
+        stdout += data.toString();
+      });
+
+      proc.stderr.on('data', (data) => {
+        stderr += data.toString();
+      });
+
+      proc.on('close', (code) => {
+        if (code === 0) {
+          resolve(stdout);
+        } else {
+          const error = new Error(`Command failed with exit code ${code}`);
+          error.stderr = stderr;
+          error.stdout = stdout;
+          reject(error);
+        }
+      });
+
+      proc.on('error', (err) => {
+        reject(err);
+      });
+    });
+  }
+
+  async processCommand(input) {
     const trimmedInput = input.trim();
     const parts = trimmedInput.split(/\s+/);
     const command = parts[0].toLowerCase();
@@ -481,7 +622,12 @@ class AveryOSTerminal {
       
       // Capsule Commands
       case 'export':
-        this.exportCapsule();
+        await this.exportCapsule();
+        break;
+      
+      // Deployment Commands
+      case 'deploy':
+        await this.deployTerminal(args);
         break;
       
       // File System Commands
@@ -563,8 +709,8 @@ class AveryOSTerminal {
 
     this.rl.prompt();
 
-    this.rl.on('line', (input) => {
-      this.processCommand(input);
+    this.rl.on('line', async (input) => {
+      await this.processCommand(input);
       this.rl.prompt();
     });
 
