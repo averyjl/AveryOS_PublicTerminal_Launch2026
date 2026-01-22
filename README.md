@@ -17,6 +17,10 @@
 
 AveryOS Public Terminal - Launch 2026 Edition is a next-generation terminal interface powered by AveryOS CapsuleEcho technology. This terminal provides enhanced security features, drift protection, and VaultChain integrity verification.
 
+### FullStack Edition
+
+This FullStack edition includes comprehensive command support for file system operations, system information, and utility functions, making it a complete terminal solution for developers and system administrators.
+
 ## Installation
 
 ### Using NPX (Recommended)
@@ -93,12 +97,52 @@ The `terminallive.config` file contains deployment-specific settings including:
 
 Once the terminal is running, you can use the following commands:
 
-- `help` - Display available commands
+### Information Commands
+- `help` - Display all available commands
 - `about` - Display information about this terminal
 - `capsule` - Show capsule information
 - `vault` - Display VaultChain Anchor information
-- `clear` - Clear the terminal screen
-- `exit` - Exit the terminal
+- `version` - Show terminal version information
+
+### File System Commands
+- `ls` or `dir` - List files and directories in current directory
+- `pwd` - Print working directory (show current path)
+- `cd <directory>` - Change to specified directory (use `..` for parent, `~` for home)
+- `mkdir <directory>` - Create a new directory
+- `cat <file>` or `type <file>` - Display contents of a file
+- `rm <path>` - Remove a file or directory
+
+### System Commands
+- `whoami` - Display current user information
+- `status` - Show system status (memory, uptime, platform)
+- `env` - Display environment variables
+- `date` - Show current date and time
+- `hostname` - Display system hostname
+
+### Utility Commands
+- `echo <text>` - Display the specified text
+- `history` - Show command history
+- `clear` or `cls` - Clear the terminal screen
+- `exit` or `quit` - Exit the terminal
+
+### Command Examples
+
+```bash
+# Navigate file system
+AveryOS> pwd
+AveryOS> ls
+AveryOS> cd Documents
+AveryOS> cat myfile.txt
+
+# Get system information
+AveryOS> whoami
+AveryOS> status
+AveryOS> hostname
+
+# Use utilities
+AveryOS> echo Hello, AveryOS!
+AveryOS> history
+```
 
 ## Features
 
@@ -107,6 +151,9 @@ Once the terminal is running, you can use the following commands:
 - **VaultChain Anchor**: SHA-512 based integrity verification
 - **Interactive Terminal**: User-friendly command-line interface
 - **Retroclaim Notice**: Clear usage agreements
+- **FullStack Commands**: Comprehensive file system, system information, and utility commands
+- **Command History**: Track and review previously executed commands
+- **Cross-Platform**: Works on Windows, macOS, and Linux
 
 ## Requirements
 
