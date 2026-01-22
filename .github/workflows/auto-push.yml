@@ -56,6 +56,7 @@ jobs:
           COMMIT_MSG=$(git log -1 --pretty=%B)
           TIMESTAMP=$(date -u +"%Y-%m-%dT%H:%M:%SZ")
           
+          # Note: Capsule values are synchronized with package.json and averyos.config
           cat > capsule_metadata.json << EOF
           {
             "capsule": {
@@ -82,14 +83,16 @@ jobs:
 
       - name: Sync Capsule with Registry
         run: |
-          echo "🔄 Syncing capsule with registry..."
-          # Note: This is a placeholder for the actual API call
-          # Uncomment and configure when the API endpoint is available
+          echo "🔄 Preparing capsule registry sync..."
+          echo "Note: Registry sync is currently disabled (placeholder)"
+          echo "To enable, configure the AveryOS_CapsulePushToken_v2 secret"
+          echo "and uncomment the curl command in this workflow step"
+          # Uncomment the following lines when registry API is configured:
           # curl -X POST https://vaultchain.api/register-capsule \
           #   -H "Authorization: Bearer ${{ secrets.AveryOS_CapsulePushToken_v2 }}" \
           #   -H "Content-Type: application/json" \
           #   -d @capsule_metadata.json
-          echo "✓ Capsule sync completed (placeholder)"
+          echo "✓ Workflow completed (registry sync disabled)"
       
       - name: Push Notification
         if: success()

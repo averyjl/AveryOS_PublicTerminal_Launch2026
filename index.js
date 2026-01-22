@@ -79,7 +79,7 @@ class AveryOSTerminal {
     console.log('  date      - Show current date and time');
     console.log('  hostname  - Display system hostname');
     console.log('\n📦 Capsule Commands:');
-    console.log('  capsule deploy - Deploy capsule to production (runs deploy.sh)');
+    console.log('  capsule deploy - Deploy capsule to production (TerminalLive_v1)');
     console.log('  export         - Export terminal as capsule ZIP (TerminalStack_v1.aoscap.zip)');
     console.log('\n🛠️  Utility Commands:');
     console.log('  echo <t>  - Display text');
