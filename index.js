@@ -337,7 +337,7 @@ class AveryOSTerminal {
     console.log('');
   }
 
-  exportCapsule() {
+  async exportCapsule() {
     console.log('\nExporting Terminal as Capsule ZIP...');
     console.log('━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━');
 
@@ -359,56 +359,62 @@ class AveryOSTerminal {
       'install.sh'
     ];
 
-    output.on('close', () => {
-      const sizeInMB = (archive.pointer() / (1024 * 1024)).toFixed(2);
-      console.log(`✓ Capsule exported successfully!`);
-      console.log(`  File: ${outputFileName}`);
-      console.log(`  Size: ${sizeInMB} MB`);
-      console.log(`  Location: ${outputPath}`);
-      console.log('\nCapsule Contents:');
-      filesToInclude.forEach(file => {
-        console.log(`  ✓ ${file}`);
+    // Return a promise that resolves when the archive is complete
+    return new Promise((resolve, reject) => {
+      output.on('close', () => {
+        const sizeInMB = (archive.pointer() / (1024 * 1024)).toFixed(2);
+        console.log(`✓ Capsule exported successfully!`);
+        console.log(`  File: ${outputFileName}`);
+        console.log(`  Size: ${sizeInMB} MB`);
+        console.log(`  Location: ${outputPath}`);
+        console.log('\nCapsule Contents:');
+        filesToInclude.forEach(file => {
+          console.log(`  ✓ ${file}`);
+        });
+        console.log('\nThe capsule can now be deployed to endpoints like terminal.averyos.com');
+        console.log('for authenticated buttons/CLI bridge interaction.\n');
+        resolve();
       });
-      console.log('\nThe capsule can now be deployed to endpoints like terminal.averyos.com');
-      console.log('for authenticated buttons/CLI bridge interaction.\n');
+
+      output.on('error', (err) => {
+        console.error(`Error creating output file: ${err.message}\n`);
+        reject(err);
+      });
+
+      archive.on('error', (err) => {
+        console.error(`Error creating archive: ${err.message}\n`);
+        reject(err);
+      });
+
+      archive.on('warning', (err) => {
+        if (err.code === 'ENOENT') {
+          console.warn(`Warning: ${err.message}`);
+        } else {
+          console.warn(`Archive warning: ${err.message}`);
+        }
+      });
+
+      // Pipe archive data to the file
+      archive.pipe(output);
+
+      // Add files to the archive
+      const __filename = fileURLToPath(import.meta.url);
+      const __dirname = dirname(__filename);
+      filesToInclude.forEach(file => {
+        const filePath = join(__dirname, file);
+        if (existsSync(filePath)) {
+          archive.file(filePath, { name: file });
+        } else {
+          console.warn(`Warning: File not found: ${file}`);
+        }
+      });
+
+      // Finalize the archive
+      archive.finalize();
     });
-
-    output.on('error', (err) => {
-      console.error(`Error creating output file: ${err.message}\n`);
-    });
-
-    archive.on('error', (err) => {
-      console.error(`Error creating archive: ${err.message}\n`);
-    });
-
-    archive.on('warning', (err) => {
-      if (err.code === 'ENOENT') {
-        console.warn(`Warning: ${err.message}`);
-      } else {
-        console.warn(`Archive warning: ${err.message}`);
-      }
-    });
-
-    // Pipe archive data to the file
-    archive.pipe(output);
-
-    // Add files to the archive
-    const __filename = fileURLToPath(import.meta.url);
-    const __dirname = dirname(__filename);
-    filesToInclude.forEach(file => {
-      const filePath = join(__dirname, file);
-      if (existsSync(filePath)) {
-        archive.file(filePath, { name: file });
-      } else {
-        console.warn(`Warning: File not found: ${file}`);
-      }
-    });
-
-    // Finalize the archive
-    archive.finalize();
   }
 
-  processCommand(input) {
+  async processCommand(input) {
     const trimmedInput = input.trim();
     const parts = trimmedInput.split(/\s+/);
     const command = parts[0].toLowerCase();
@@ -438,7 +444,7 @@ class AveryOSTerminal {
       
       // Capsule Commands
       case 'export':
-        this.exportCapsule();
+        await this.exportCapsule();
         break;
       
       // File System Commands
@@ -520,8 +526,8 @@ class AveryOSTerminal {
 
     this.rl.prompt();
 
-    this.rl.on('line', (input) => {
-      this.processCommand(input);
+    this.rl.on('line', async (input) => {
+      await this.processCommand(input);
       this.rl.prompt();
     });
 
