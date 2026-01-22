@@ -3,12 +3,18 @@ name: Deploy to Cloudflare Pages
 on:
   push:
     branches: [main]
+  workflow_dispatch:  # Allow manual deployment trigger
 
 jobs:
   deploy:
     runs-on: ubuntu-latest
     steps:
       - uses: actions/checkout@v3
+      
+      - name: Setup Node.js
+        uses: actions/setup-node@v3
+        with:
+          node-version: '18'
       
       - name: CapsuleVerifier - Verify VaultChain SHA Integrity
         run: |
@@ -42,6 +48,12 @@ jobs:
           
           echo "✓ CapsuleVerifier: VaultChain integrity verified across both install scripts"
       
+      - name: Run Deployment Script
+        run: |
+          echo "🚀 Running capsule deployment..."
+          chmod +x deploy.sh
+          ./deploy.sh
+      
       - name: Publish to Cloudflare Pages
         uses: cloudflare/pages-action@v1
         with:
@@ -49,3 +61,16 @@ jobs:
           accountId: ${{ secrets.CLOUDFLARE_ACCOUNT_ID }}
           projectName: averyos-terminal
           directory: .
+      
+      - name: Deployment Status
+        if: success()
+        run: |
+          echo "✅ Capsule deployed successfully!"
+          echo "⛓️⚓⛓️"
+          echo "Deployment completed at $(date -u)"
+      
+      - name: Deployment Failed
+        if: failure()
+        run: |
+          echo "❌ Deployment failed"
+          echo "Check logs above for details"

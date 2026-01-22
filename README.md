@@ -53,7 +53,43 @@ or directly:
 node index.js
 ```
 
+### Running the Download Server
+
+To start the HTTP server for capsule downloads:
+
+```bash
+npm run server
+```
+
+or directly:
+
+```bash
+node server.js
+```
+
+The server will be available at `http://localhost:3000` by default. You can set a custom port using the `PORT` environment variable:
+
+```bash
+PORT=8080 npm run server
+```
+
 ## Deployment
+
+### CLI Deployment (New!)
+
+Deploy the capsule directly from the terminal CLI using the new `capsule deploy` command:
+
+```bash
+AveryOS> capsule deploy
+```
+
+This command executes the TerminalLive_v1 deployment script, which will:
+1. Verify VaultChain integrity
+2. Check prerequisites (Node.js, NPM)
+3. Install production dependencies
+4. Create deployment manifest
+5. Verify terminal functionality
+6. Generate deployment report
 
 ### TerminalLive_v1 Deployment
 
@@ -77,6 +113,44 @@ The deployment process will:
 5. Verify terminal functionality
 6. Generate deployment report
 
+#### Deploy from Terminal CLI
+
+You can also trigger deployment directly from within the AveryOS Terminal using the `deploy` command:
+
+```bash
+AveryOS> deploy
+```
+
+This will:
+1. Stage all changes (git add)
+2. Commit changes with timestamp
+3. Run the deployment script (./deploy.sh)
+4. Push changes to GitHub
+
+##### Deploy Command Options
+
+The `deploy` command supports the following options:
+
+- `--no-push` - Skip GitHub push (commit changes locally only)
+- `--no-script` - Skip running the deployment script
+- `-m <message>` or `--message <message>` - Custom commit message
+
+##### Examples
+
+```bash
+# Deploy with GitHub push automation (default)
+AveryOS> deploy
+
+# Deploy without pushing to GitHub
+AveryOS> deploy --no-push
+
+# Deploy with custom commit message
+AveryOS> deploy -m "Feature update"
+
+# Quick local deployment (no script, no push)
+AveryOS> deploy --no-push --no-script
+```
+
 #### Deploy and Start
 
 To deploy and immediately start the terminal:
@@ -92,6 +166,26 @@ The `terminallive.config` file contains deployment-specific settings including:
 - Security settings
 - Terminal behavior in live mode
 - Health check and logging options
+
+### GitHub Automation
+
+The repository includes automated GitHub Actions workflows for seamless deployment:
+
+#### Auto Push on Commit
+Every push to the `main` branch automatically:
+1. Verifies VaultChain integrity
+2. Generates capsule metadata with commit information
+3. Syncs with the capsule registry
+4. Reports deployment status
+
+#### Cloudflare Pages Deployment
+Automatic deployment to Cloudflare Pages on push to `main`:
+1. VaultChain verification
+2. Executes deployment script
+3. Publishes to Cloudflare Pages
+4. Reports deployment status
+
+Both workflows can be monitored in the GitHub Actions tab and provide detailed logs for troubleshooting.
 
 ## Usage
 
@@ -121,6 +215,10 @@ Once the terminal is running, you can use the following commands:
 
 ### Capsule Commands
 - `export` - Export terminal as capsule ZIP file (TerminalStack_v1.aoscap.zip)
+- `capsule deploy` - Deploy capsule to production (runs TerminalLive_v1 deployment)
+
+### Deployment Commands
+- `deploy` - Deploy terminal with GitHub push automation (supports --no-push, --no-script, -m options)
 
 ### CapsuleEcho Trace Commands
 - `trace` - View recent capsule traces (default: last 20)
@@ -148,6 +246,9 @@ AveryOS> whoami
 AveryOS> status
 AveryOS> hostname
 
+# Deploy capsule to production
+AveryOS> capsule deploy
+
 # Export terminal as capsule
 AveryOS> export
 
@@ -156,6 +257,11 @@ AveryOS> trace
 AveryOS> trace-details 5
 AveryOS> trace-viewer
 AveryOS> trace-clear
+# Deploy with GitHub push automation
+AveryOS> deploy
+
+# Deploy without pushing to GitHub
+AveryOS> deploy --no-push -m "Local deployment"
 
 # Use utilities
 AveryOS> echo Hello, AveryOS!
@@ -168,7 +274,9 @@ The terminal includes a powerful export feature that packages the entire termina
 
 ### Exporting the Capsule
 
-To export the terminal as a capsule:
+#### From Terminal Command
+
+To export the terminal as a capsule from within the terminal:
 
 ```bash
 AveryOS> export
@@ -182,6 +290,54 @@ This creates a ZIP file containing:
 - `README.md` - Documentation
 - `deploy.sh` - Deployment script
 - `install.sh` - Installation script
+
+### Capsule Download Server
+
+For easy download and automation support, the terminal includes an HTTP server that hosts the capsule ZIP file for download at `terminal.averyos.com` or any configured domain.
+
+#### Starting the Download Server
+
+```bash
+npm run server
+```
+
+Or directly:
+
+```bash
+node server.js
+```
+
+The server will start on port 3000 by default (configurable via `PORT` environment variable).
+
+#### Server Endpoints
+
+- **`/`** - Landing page with download information
+- **`/download`** - Download the capsule ZIP file
+- **`/info`** - View capsule information and VaultChain details
+- **`/health`** - Health check endpoint (JSON response)
+
+#### Automation Downloads
+
+Use curl to download the capsule:
+
+```bash
+curl -O http://terminal.averyos.com/download
+```
+
+Or with wget:
+
+```bash
+wget http://terminal.averyos.com/download
+```
+
+The downloaded file will be saved as `TerminalStack_v1.aoscap.zip`.
+
+#### Server Features
+
+- **Auto-generation**: Capsule is automatically generated on first request if not present
+- **Custom Headers**: Includes VaultChain anchor, capsule URI, and license information
+- **Health Monitoring**: Health check endpoint for uptime monitoring
+- **Graceful Shutdown**: Handles SIGTERM and SIGINT signals properly
 
 The exported capsule can be deployed to production endpoints and used for:
 - Direct interaction via authenticated buttons
@@ -279,6 +435,91 @@ AveryOS> trace-viewer
 # Clean up when done
 AveryOS> trace-clear
 ```
+### Capsule Download Server
+
+The repository includes a web server that provides an HTTP endpoint for downloading the capsule ZIP file. This is ideal for deployment to terminal.averyos.com or similar hosting environments.
+### HTTP Capsule Download Server
+
+The project includes an HTTP server for serving the capsule ZIP file via download endpoints. This enables deployment to domains like terminal.averyos.com.
+
+#### Starting the Server
+
+```bash
+npm run server
+```
+
+By default, the server runs on port 3000. You can change the port using the PORT environment variable:
+
+```bash
+PORT=8080 npm run server
+```
+
+#### Available Endpoints
+
+- `GET /` - API information and available endpoints
+- `GET /info` - Detailed capsule information including VaultChain anchor
+- `GET /download/capsule` - Download the TerminalStack_v1.aoscap.zip file
+- `GET /health` - Health check endpoint
+
+#### Example Usage
+
+```bash
+# Get API information
+curl http://localhost:3000/
+
+# Get capsule information
+curl http://localhost:3000/info
+
+# Download the capsule ZIP
+curl -O -J http://localhost:3000/download/capsule
+
+# Or use wget
+wget http://localhost:3000/download/capsule
+
+# Or open in browser
+open http://localhost:3000/download/capsule
+```
+
+The server automatically generates a fresh capsule on-demand or serves a cached version if it's less than 1 hour old. This ensures downloads always contain the latest terminal code.
+Or with a custom port:
+
+```bash
+PORT=8080 node server.js
+```
+
+#### Server Endpoints
+
+- **GET /** - Server status and information
+- **GET /status** - Server status and capsule information  
+- **GET /download** - Download the capsule ZIP file
+- **GET /regenerate** - Regenerate the capsule ZIP file
+
+#### Examples
+
+Check server status:
+```bash
+curl http://localhost:3000/status
+```
+
+Download the capsule:
+```bash
+curl -O http://localhost:3000/download
+# or
+wget http://localhost:3000/download
+```
+
+Regenerate the capsule:
+```bash
+curl http://localhost:3000/regenerate
+```
+
+#### Server Features
+
+- Automatic capsule generation on first request
+- Proper Content-Type and Content-Disposition headers for downloads
+- VaultChain anchor included in response headers
+- Request logging with timestamps
+- Error handling and detailed status responses
 
 ## Features
 
