@@ -19,7 +19,6 @@ import { createInterface } from 'readline';
 import { readdirSync, statSync, readFileSync, mkdirSync, rmSync, existsSync } from 'fs';
 import { resolve, basename, dirname } from 'path';
 import { homedir, userInfo, platform, arch, uptime, totalmem, freemem, hostname } from 'os';
-import { execSync } from 'child_process';
 
 // AveryOS Constants
 const VAULT_CHAIN_ANCHOR = 'cf83e1357eefb8bdf1542850d66d8007d620e4050b5715dc83f4a921d36ce9ce47d0d13c5d85f2b0ff8318d2877eec2f63b931bd47417a81a538327af927da3e';
