@@ -20,6 +20,7 @@ import { readdirSync, statSync, readFileSync, mkdirSync, rmSync, existsSync, cre
 import { resolve, basename, dirname, join } from 'path';
 import { homedir, userInfo, platform, arch, uptime, totalmem, freemem, hostname } from 'os';
 import { fileURLToPath } from 'url';
+import { spawn } from 'child_process';
 import archiver from 'archiver';
 
 // AveryOS Constants
@@ -78,7 +79,8 @@ class AveryOSTerminal {
     console.log('  date      - Show current date and time');
     console.log('  hostname  - Display system hostname');
     console.log('\n📦 Capsule Commands:');
-    console.log('  export    - Export terminal as capsule ZIP (TerminalStack_v1.aoscap.zip)');
+    console.log('  capsule deploy - Deploy capsule to production (runs deploy.sh)');
+    console.log('  export         - Export terminal as capsule ZIP (TerminalStack_v1.aoscap.zip)');
     console.log('\n🛠️  Utility Commands:');
     console.log('  echo <t>  - Display text');
     console.log('  history   - Show command history');
@@ -408,6 +410,42 @@ class AveryOSTerminal {
     archive.finalize();
   }
 
+  deployCapsule() {
+    console.log('\nDeploying Capsule to Production...');
+    console.log('━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━');
+    console.log('Running TerminalLive_v1 deployment script...\n');
+
+    const __filename = fileURLToPath(import.meta.url);
+    const __dirname = dirname(__filename);
+    const deployScriptPath = join(__dirname, 'deploy.sh');
+
+    // Check if deploy.sh exists
+    if (!existsSync(deployScriptPath)) {
+      console.log('❌ Error: deploy.sh not found');
+      console.log('Please ensure deploy.sh is in the terminal directory.\n');
+      return;
+    }
+
+    // Execute the deploy.sh script
+    const deployProcess = spawn('bash', [deployScriptPath], {
+      cwd: __dirname,
+      stdio: 'inherit'
+    });
+
+    deployProcess.on('close', (code) => {
+      if (code === 0) {
+        console.log('\n✅ Capsule deployment completed successfully!');
+        console.log('⛓️⚓⛓️\n');
+      } else {
+        console.log(`\n❌ Deployment failed with exit code ${code}\n`);
+      }
+    });
+
+    deployProcess.on('error', (err) => {
+      console.log(`\n❌ Error running deployment script: ${err.message}\n`);
+    });
+  }
+
   processCommand(input) {
     const trimmedInput = input.trim();
     const parts = trimmedInput.split(/\s+/);
@@ -427,7 +465,12 @@ class AveryOSTerminal {
         this.displayAbout();
         break;
       case 'capsule':
-        this.displayCapsuleInfo();
+        // Check if there's a subcommand
+        if (args.length > 0 && args[0].toLowerCase() === 'deploy') {
+          this.deployCapsule();
+        } else {
+          this.displayCapsuleInfo();
+        }
         break;
       case 'vault':
         this.displayVaultInfo();
