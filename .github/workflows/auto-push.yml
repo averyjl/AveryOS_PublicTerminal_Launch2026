@@ -20,9 +20,6 @@ jobs:
           INSTALL_SHA=$(grep -oP 'VaultChain Anchor: \K[a-f0-9]{128}' install.sh || echo "")
           DEPLOY_SHA=$(grep -oP 'VaultChain Anchor: \K[a-f0-9]{128}' deploy.sh || echo "")
           
-          echo "Install SHA: ${INSTALL_SHA:0:32}...${INSTALL_SHA: -32}"
-          echo "Deploy SHA:  ${DEPLOY_SHA:0:32}...${DEPLOY_SHA: -32}"
-          
           # Verify both SHAs exist
           if [ -z "$INSTALL_SHA" ]; then
             echo "❌ ERROR: VaultChain Anchor not found in install.sh"
@@ -33,6 +30,9 @@ jobs:
             echo "❌ ERROR: VaultChain Anchor not found in deploy.sh"
             exit 1
           fi
+          
+          echo "Install SHA: ${INSTALL_SHA:0:32}...${INSTALL_SHA: -32}"
+          echo "Deploy SHA:  ${DEPLOY_SHA:0:32}...${DEPLOY_SHA: -32}"
           
           # Verify SHAs match
           if [ "$INSTALL_SHA" != "$DEPLOY_SHA" ]; then
