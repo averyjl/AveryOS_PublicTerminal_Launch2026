@@ -6,6 +6,7 @@
   "type": "module",
   "scripts": {
     "start": "node index.js",
+    "server": "node server.js",
     "install:capsule": "npx create-averyos-terminal@latest --capsule AveryOS_PublicTerminal_Launch2026",
     "deploy": "./deploy.sh",
     "deploy:live": "./deploy.sh && npm start"
