@@ -374,18 +374,18 @@ class AveryOSTerminal {
     });
 
     output.on('error', (err) => {
-      console.log(`Error creating output file: ${err.message}\n`);
+      console.error(`Error creating output file: ${err.message}\n`);
     });
 
     archive.on('error', (err) => {
-      console.log(`Error creating archive: ${err.message}\n`);
+      console.error(`Error creating archive: ${err.message}\n`);
     });
 
     archive.on('warning', (err) => {
       if (err.code === 'ENOENT') {
-        console.log(`Warning: ${err.message}`);
+        console.warn(`Warning: ${err.message}`);
       } else {
-        console.log(`Archive warning: ${err.message}`);
+        console.warn(`Archive warning: ${err.message}`);
       }
     });
 
@@ -400,7 +400,7 @@ class AveryOSTerminal {
       if (existsSync(filePath)) {
         archive.file(filePath, { name: file });
       } else {
-        console.log(`Warning: File not found: ${file}`);
+        console.warn(`Warning: File not found: ${file}`);
       }
     });
 
