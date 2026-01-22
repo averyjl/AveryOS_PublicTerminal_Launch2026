@@ -13,6 +13,10 @@ build/
 # Deployment artifacts
 deployment-manifest.json
 
+# Capsule exports
+TerminalStack_v1.aoscap.zip
+*.aoscap.zip
+
 # IDE and Editor
 .vscode/
 .idea/
