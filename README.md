@@ -119,6 +119,9 @@ Once the terminal is running, you can use the following commands:
 - `date` - Show current date and time
 - `hostname` - Display system hostname
 
+### Capsule Commands
+- `export` - Export terminal as capsule ZIP file (TerminalStack_v1.aoscap.zip)
+
 ### Utility Commands
 - `echo <text>` - Display the specified text
 - `history` - Show command history
@@ -139,10 +142,39 @@ AveryOS> whoami
 AveryOS> status
 AveryOS> hostname
 
+# Export terminal as capsule
+AveryOS> export
+
 # Use utilities
 AveryOS> echo Hello, AveryOS!
 AveryOS> history
 ```
+
+## Capsule Export
+
+The terminal includes a powerful export feature that packages the entire terminal stack as a portable capsule ZIP file named `TerminalStack_v1.aoscap.zip`. This allows deployment to endpoints like terminal.averyos.com for authenticated buttons/CLI bridge interaction while safeguarding multi-user capsules physics.
+
+### Exporting the Capsule
+
+To export the terminal as a capsule:
+
+```bash
+AveryOS> export
+```
+
+This creates a ZIP file containing:
+- `index.js` - Main terminal application
+- `package.json` - Project metadata and dependencies
+- `averyos.config` - AveryOS capsule configuration
+- `terminallive.config` - Live deployment settings
+- `README.md` - Documentation
+- `deploy.sh` - Deployment script
+- `install.sh` - Installation script
+
+The exported capsule can be deployed to production endpoints and used for:
+- Direct interaction via authenticated buttons
+- CLI bridge communication
+- Multi-user capsule deployment with proper physics safeguards
 
 ## Features
 

@@ -16,9 +16,11 @@
  */
 
 import { createInterface } from 'readline';
-import { readdirSync, statSync, readFileSync, mkdirSync, rmSync, existsSync } from 'fs';
-import { resolve, basename, dirname } from 'path';
+import { readdirSync, statSync, readFileSync, mkdirSync, rmSync, existsSync, createWriteStream } from 'fs';
+import { resolve, basename, dirname, join } from 'path';
 import { homedir, userInfo, platform, arch, uptime, totalmem, freemem, hostname } from 'os';
+import { fileURLToPath } from 'url';
+import archiver from 'archiver';
 
 // AveryOS Constants
 const VAULT_CHAIN_ANCHOR = 'cf83e1357eefb8bdf1542850d66d8007d620e4050b5715dc83f4a921d36ce9ce47d0d13c5d85f2b0ff8318d2877eec2f63b931bd47417a81a538327af927da3e';
@@ -75,6 +77,8 @@ class AveryOSTerminal {
     console.log('  env       - Display environment variables');
     console.log('  date      - Show current date and time');
     console.log('  hostname  - Display system hostname');
+    console.log('\n📦 Capsule Commands:');
+    console.log('  export    - Export terminal as capsule ZIP (TerminalStack_v1.aoscap.zip)');
     console.log('\n🛠️  Utility Commands:');
     console.log('  echo <t>  - Display text');
     console.log('  history   - Show command history');
@@ -333,6 +337,77 @@ class AveryOSTerminal {
     console.log('');
   }
 
+  exportCapsule() {
+    console.log('\nExporting Terminal as Capsule ZIP...');
+    console.log('━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━');
+
+    const outputFileName = 'TerminalStack_v1.aoscap.zip';
+    const outputPath = resolve(process.cwd(), outputFileName);
+    const output = createWriteStream(outputPath);
+    const archive = archiver('zip', {
+      zlib: { level: 9 } // Maximum compression
+    });
+
+    // Essential files to include in the capsule
+    const filesToInclude = [
+      'index.js',
+      'package.json',
+      'averyos.config',
+      'terminallive.config',
+      'README.md',
+      'deploy.sh',
+      'install.sh'
+    ];
+
+    output.on('close', () => {
+      const sizeInMB = (archive.pointer() / (1024 * 1024)).toFixed(2);
+      console.log(`✓ Capsule exported successfully!`);
+      console.log(`  File: ${outputFileName}`);
+      console.log(`  Size: ${sizeInMB} MB`);
+      console.log(`  Location: ${outputPath}`);
+      console.log('\nCapsule Contents:');
+      filesToInclude.forEach(file => {
+        console.log(`  ✓ ${file}`);
+      });
+      console.log('\nThe capsule can now be deployed to endpoints like terminal.averyos.com');
+      console.log('for authenticated buttons/CLI bridge interaction.\n');
+    });
+
+    output.on('error', (err) => {
+      console.error(`Error creating output file: ${err.message}\n`);
+    });
+
+    archive.on('error', (err) => {
+      console.error(`Error creating archive: ${err.message}\n`);
+    });
+
+    archive.on('warning', (err) => {
+      if (err.code === 'ENOENT') {
+        console.warn(`Warning: ${err.message}`);
+      } else {
+        console.warn(`Archive warning: ${err.message}`);
+      }
+    });
+
+    // Pipe archive data to the file
+    archive.pipe(output);
+
+    // Add files to the archive
+    const __filename = fileURLToPath(import.meta.url);
+    const __dirname = dirname(__filename);
+    filesToInclude.forEach(file => {
+      const filePath = join(__dirname, file);
+      if (existsSync(filePath)) {
+        archive.file(filePath, { name: file });
+      } else {
+        console.warn(`Warning: File not found: ${file}`);
+      }
+    });
+
+    // Finalize the archive
+    archive.finalize();
+  }
+
   processCommand(input) {
     const trimmedInput = input.trim();
     const parts = trimmedInput.split(/\s+/);
@@ -359,6 +434,11 @@ class AveryOSTerminal {
         break;
       case 'version':
         this.displayVersion();
+        break;
+      
+      // Capsule Commands
+      case 'export':
+        this.exportCapsule();
         break;
       
       // File System Commands
