@@ -581,9 +581,15 @@ class AveryOSTerminal {
     if (Object.keys(trace.details).length > 0) {
       console.log('\nDetails:');
       Object.entries(trace.details).forEach(([key, value]) => {
-        const displayValue = typeof value === 'object' 
-          ? JSON.stringify(value, null, 2).split('\n').map((line, idx) => idx === 0 ? line : '  ' + line).join('\n')
-          : value;
+        let displayValue;
+        try {
+          displayValue = typeof value === 'object' 
+            ? JSON.stringify(value, null, 2).split('\n').map((line, idx) => idx === 0 ? line : '  ' + line).join('\n')
+            : value;
+        } catch (err) {
+          // Handle circular references or other serialization errors
+          displayValue = String(value);
+        }
         console.log(`  ${key}: ${displayValue}`);
       });
     }
@@ -615,8 +621,8 @@ class AveryOSTerminal {
     Object.entries(categories).sort((a, b) => b[1] - a[1]).forEach(([category, count]) => {
       const icon = this.getCategoryIcon(category);
       const percentage = ((count / totalTraces) * 100).toFixed(1);
-      // Ensure at least one bar for any category with traces
-      const barCount = Math.max(1, Math.floor(count / 2));
+      // Use ceiling to ensure single-occurrence categories get proper representation
+      const barCount = Math.max(1, Math.ceil(count / 2));
       const bar = '█'.repeat(barCount);
       console.log(`${icon} ${category.padEnd(15)} ${count.toString().padStart(3)} (${percentage}%) ${bar}`);
     });
@@ -665,8 +671,10 @@ class AveryOSTerminal {
     console.log(`✓ Cleared ${clearedCount} trace logs`);
     console.log('✓ Trace system reset\n');
     
-    // Reinitialize with a fresh trace
-    this.initializeCapsuleTracing();
+    // Log the reset operation
+    this.logTrace('SYSTEM', 'Trace system reset', { 
+      clearedCount: clearedCount 
+    });
   }
 
   getCategoryIcon(category) {
