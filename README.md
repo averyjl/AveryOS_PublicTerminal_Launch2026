@@ -77,6 +77,44 @@ The deployment process will:
 5. Verify terminal functionality
 6. Generate deployment report
 
+#### Deploy from Terminal CLI
+
+You can also trigger deployment directly from within the AveryOS Terminal using the `deploy` command:
+
+```bash
+AveryOS> deploy
+```
+
+This will:
+1. Stage all changes (git add)
+2. Commit changes with timestamp
+3. Run the deployment script (./deploy.sh)
+4. Push changes to GitHub
+
+##### Deploy Command Options
+
+The `deploy` command supports the following options:
+
+- `--no-push` - Skip GitHub push (commit changes locally only)
+- `--no-script` - Skip running the deployment script
+- `-m <message>` or `--message <message>` - Custom commit message
+
+##### Examples
+
+```bash
+# Deploy with GitHub push automation (default)
+AveryOS> deploy
+
+# Deploy without pushing to GitHub
+AveryOS> deploy --no-push
+
+# Deploy with custom commit message
+AveryOS> deploy -m "Feature update"
+
+# Quick local deployment (no script, no push)
+AveryOS> deploy --no-push --no-script
+```
+
 #### Deploy and Start
 
 To deploy and immediately start the terminal:
@@ -122,6 +160,9 @@ Once the terminal is running, you can use the following commands:
 ### Capsule Commands
 - `export` - Export terminal as capsule ZIP file (TerminalStack_v1.aoscap.zip)
 
+### Deployment Commands
+- `deploy` - Deploy terminal with GitHub push automation (supports --no-push, --no-script, -m options)
+
 ### Utility Commands
 - `echo <text>` - Display the specified text
 - `history` - Show command history
@@ -144,6 +185,12 @@ AveryOS> hostname
 
 # Export terminal as capsule
 AveryOS> export
+
+# Deploy with GitHub push automation
+AveryOS> deploy
+
+# Deploy without pushing to GitHub
+AveryOS> deploy --no-push -m "Local deployment"
 
 # Use utilities
 AveryOS> echo Hello, AveryOS!
