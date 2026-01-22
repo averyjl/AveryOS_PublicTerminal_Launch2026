@@ -12,6 +12,38 @@ jobs:
       - name: Checkout Repo
         uses: actions/checkout@v3
 
+      - name: CapsuleVerifier - Verify VaultChain SHA Integrity
+        run: |
+          echo "🔒 Running CapsuleVerifier..."
+          
+          # Extract VaultChain Anchor from both scripts
+          INSTALL_SHA=$(grep -oP 'VaultChain Anchor: \K[a-f0-9]{128}' install.sh || echo "")
+          DEPLOY_SHA=$(grep -oP 'VaultChain Anchor: \K[a-f0-9]{128}' deploy.sh || echo "")
+          
+          # Verify both SHAs exist
+          if [ -z "$INSTALL_SHA" ]; then
+            echo "❌ ERROR: VaultChain Anchor not found in install.sh"
+            exit 1
+          fi
+          
+          if [ -z "$DEPLOY_SHA" ]; then
+            echo "❌ ERROR: VaultChain Anchor not found in deploy.sh"
+            exit 1
+          fi
+          
+          echo "Install SHA: ${INSTALL_SHA:0:32}...${INSTALL_SHA: -32}"
+          echo "Deploy SHA:  ${DEPLOY_SHA:0:32}...${DEPLOY_SHA: -32}"
+          
+          # Verify SHAs match
+          if [ "$INSTALL_SHA" != "$DEPLOY_SHA" ]; then
+            echo "❌ ERROR: VaultChain Anchor mismatch between install.sh and deploy.sh"
+            echo "  Install: $INSTALL_SHA"
+            echo "  Deploy:  $DEPLOY_SHA"
+            exit 1
+          fi
+          
+          echo "✓ CapsuleVerifier: VaultChain integrity verified across both install scripts"
+
       - name: Sync Capsule with Registry
         run: |
           curl -X POST https://vaultchain.api/register-capsule \

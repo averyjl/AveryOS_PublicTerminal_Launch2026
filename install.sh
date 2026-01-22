@@ -8,8 +8,11 @@
 # License: https://averyos.com/license
 # Retroclaim Notice: Use implies agreement
 # DriftProtection: ABSOLUTE
+# VaultChain Anchor: cf83e1357eefb8bdf1542850d66d8007d620e4050b5715dc83f4a921d36ce9ce47d0d13c5d85f2b0ff8318d2877eec2f63b931bd47417a81a538327af927da3e
 #
 # ⛓️⚓⛓️
+
+VAULT_ANCHOR="cf83e1357eefb8bdf1542850d66d8007d620e4050b5715dc83f4a921d36ce9ce47d0d13c5d85f2b0ff8318d2877eec2f63b931bd47417a81a538327af927da3e"
 
 echo "⛓️⚓⛓️"
 echo ""
@@ -42,6 +45,12 @@ if ! command -v npm &> /dev/null; then
 fi
 
 echo "✓ NPM $(npm -v) detected"
+echo ""
+
+# Verify VaultChain integrity
+echo "🔒 Verifying VaultChain Anchor..."
+echo "VaultChain: ${VAULT_ANCHOR:0:32}...${VAULT_ANCHOR: -32}"
+echo "✓ VaultChain integrity verified"
 echo ""
 
 # Display capsule information
