@@ -10,6 +10,9 @@ dist/
 build/
 *.log
 
+# Deployment artifacts
+deployment-manifest.json
+
 # IDE and Editor
 .vscode/
 .idea/

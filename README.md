@@ -49,6 +49,46 @@ or directly:
 node index.js
 ```
 
+## Deployment
+
+### TerminalLive_v1 Deployment
+
+Deploy the terminal to a live production environment using the TerminalLive_v1 deployment system:
+
+```bash
+npm run deploy
+```
+
+Or use the deployment script directly:
+
+```bash
+./deploy.sh
+```
+
+The deployment process will:
+1. Verify VaultChain integrity
+2. Check prerequisites (Node.js, NPM)
+3. Install production dependencies
+4. Create deployment manifest
+5. Verify terminal functionality
+6. Generate deployment report
+
+#### Deploy and Start
+
+To deploy and immediately start the terminal:
+
+```bash
+npm run deploy:live
+```
+
+#### Deployment Configuration
+
+The `terminallive.config` file contains deployment-specific settings including:
+- Environment configuration
+- Security settings
+- Terminal behavior in live mode
+- Health check and logging options
+
 ## Usage
 
 Once the terminal is running, you can use the following commands:
