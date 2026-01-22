@@ -293,6 +293,56 @@ The exported capsule can be deployed to production endpoints and used for:
 - CLI bridge communication
 - Multi-user capsule deployment with proper physics safeguards
 
+### HTTP Capsule Download Server
+
+The project includes an HTTP server for serving the capsule ZIP file via download endpoints. This enables deployment to domains like terminal.averyos.com.
+
+#### Starting the Server
+
+```bash
+npm run server
+```
+
+Or with a custom port:
+
+```bash
+PORT=8080 node server.js
+```
+
+#### Server Endpoints
+
+- **GET /** - Server status and information
+- **GET /status** - Server status and capsule information  
+- **GET /download** - Download the capsule ZIP file
+- **GET /regenerate** - Regenerate the capsule ZIP file
+
+#### Examples
+
+Check server status:
+```bash
+curl http://localhost:3000/status
+```
+
+Download the capsule:
+```bash
+curl -O http://localhost:3000/download
+# or
+wget http://localhost:3000/download
+```
+
+Regenerate the capsule:
+```bash
+curl http://localhost:3000/regenerate
+```
+
+#### Server Features
+
+- Automatic capsule generation on first request
+- Proper Content-Type and Content-Disposition headers for downloads
+- VaultChain anchor included in response headers
+- Request logging with timestamps
+- Error handling and detailed status responses
+
 ## Features
 
 - **CapsuleEcho Technology**: Enhanced security and integrity verification
