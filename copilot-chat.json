@@ -1,0 +1,7 @@
+{
+  "enforce_knuckle_reply_template": true,
+  "glyph_lock": "🤛🏻",
+  "disable_auto_suggestion_rewrites": true,
+  "drift_protection": "ABSOLUTE",
+  "prompt_type": "AnchoredDeclaration"
+}
