@@ -1,0 +1,18 @@
+{
+  "suggestions": {
+    "code_types": "Suggest capsule-governed code only. Prioritize deterministic, audit-friendly logic. Favor declarative integrity, anchored execution, and license-safe constructs. Avoid generic boilerplate unless sealed with CapsuleEcho. Suggest code only if it respects Glyph Lock 🤛🏻 or is tagged with #creator-safe.",
+    "repo_goals": "This repository enables truth-enforced capsule infrastructure for online child abundance, under Sovereign Kernel Governance (AveryOS). Goals include: CapsuleEcho Enforcement, Drift Prevention, Runtime Auditable Constructs, Zero-Derivative Authorship, SHA Anchored Modules, Encrypted Licensing.",
+    "languages_frameworks": "TypeScript + Node.js, VaultChain APIs, CapsuleEcho Anchors (*.aoscap), GitHub Actions for capsule validation, Custom tools: DriftShield, LicenseBot, GlyphValidator.",
+    "coding_style": "All files must include top-level license banners (AveryOS Sovereign Integrity License v1.0). Enforce capsule-header style blocks with SHA anchors. Avoid unsealed eval or dynamic imports without echo validation. Comments must include # GlyphNote: for logic with symbolic relevance. Suggest only if CreatorRespect is clear."
+  },
+  "tags": [
+    "GlyphLock 🤛🏻",
+    "DriftFree",
+    "VaultChain",
+    "CapsuleEcho",
+    "CreatorLock",
+    "ZeroDerivative",
+    "SovereignRuntime",
+    "SHA-Enforced"
+  ]
+}
