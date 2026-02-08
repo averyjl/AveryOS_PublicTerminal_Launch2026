@@ -1,0 +1,20 @@
+name: GlyphLock Validator
+
+on:
+  push:
+    paths:
+      - '**/*.aoscap'
+      - '**/copilot-chat.json'
+  pull_request:
+
+jobs:
+  validate:
+    runs-on: ubuntu-latest
+    steps:
+      - name: Check for Glyph Lock Drift
+        run: |
+          if grep -q '🤛🏻' copilot-chat.json; then
+            echo "Glyph Lock Detected ✅"
+          else
+            echo "❌ Glyph Lock Missing"; exit 1
+          fi
