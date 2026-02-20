@@ -37,3 +37,12 @@ temp/
 .env
 .env.local
 .env.*.local
+
+# Sovereign Lock (private Creator-Lock state — must never be committed)
+.sovereign-lock
+
+# Capsule runtime logs (generated at runtime — gitignored per audit requirement)
+capsule_logs
+
+# CI-generated capsule metadata (ephemeral build artifact)
+capsule_metadata.json
